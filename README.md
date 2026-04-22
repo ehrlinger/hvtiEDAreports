@@ -6,6 +6,7 @@ Generates a polished, self-contained HTML exploratory data analysis (EDA) report
 for any dataset delivered to clinical collaborators or registry partners. Recipients
 open a single HTML file in any browser — no Python, no setup required.
 
+[![Version](https://img.shields.io/github/v/release/ehrlinger/hvtiEDAreports?label=version)](https://github.com/ehrlinger/hvtiEDAreports/releases)
 [![CI](https://github.com/ehrlinger/hvtiEDAreports/actions/workflows/ci.yml/badge.svg)](https://github.com/ehrlinger/hvtiEDAreports/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![Quarto 1.5+](https://img.shields.io/badge/quarto-1.5+-blue.svg)](https://quarto.org/)
@@ -188,6 +189,30 @@ pyinstaller installer/build_windows.spec --clean --noconfirm
 # macOS
 pyinstaller installer/build_macos.spec --clean --noconfirm
 ```
+
+---
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/).
+
+- **Patch** (`0.x.Y`) — bug fixes, no interface changes
+- **Minor** (`0.X.0`) — new input formats, new report sections, backwards-compatible CLI additions
+- **Major** (`X.0.0`) — breaking changes to the CLI interface or manifest schema
+
+Releases are tagged on `main` and published as [GitHub Releases](https://github.com/ehrlinger/hvtiEDAreports/releases). The version badge at the top of this README reflects the latest release.
+
+To cut a release (maintainer only):
+
+```bash
+# 1. Update version in pyproject.toml
+# 2. Commit: git commit -am "Bump version to X.Y.Z"
+# 3. Tag:    git tag vX.Y.Z
+# 4. Push:   git push && git push --tags
+# 5. Create a GitHub Release from the tag
+```
+
+The package is not published to PyPI. Install from source using the instructions above.
 
 ---
 
