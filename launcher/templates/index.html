@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EDA Report Launcher</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>EDA Report Launcher</h1>
+      <p class="subtitle">CORR / CCF Heart &amp; Vascular Institute</p>
+    </header>
+
+    <main>
+      <!-- File picker -->
+      <section class="card" id="file-section">
+        <h2>1. Select dataset</h2>
+        <div class="field">
+          <label for="data-file">Data file</label>
+          <!-- Native file input; filtered to supported extensions -->
+          <input type="file"
+                 id="data-file"
+                 accept=".xpt,.sas7bdat,.csv,.pkl"
+                 onchange="onFileSelected(this)" />
+          <p class="hint">Supported: .xpt &nbsp;·&nbsp; .sas7bdat &nbsp;·&nbsp; .csv &nbsp;·&nbsp; .pkl</p>
+        </div>
+      </section>
+
+      <!-- Options -->
+      <section class="card" id="options-section">
+        <h2>2. Options <span class="optional">(optional)</span></h2>
+
+        <div class="field">
+          <label for="x-axis">X-axis variable</label>
+          <input type="text" id="x-axis" placeholder="Auto-detect from column names" />
+          <p class="hint">Leave blank to use the first date/time column found.</p>
+        </div>
+
+        <div class="field">
+          <label for="report-title">Report title</label>
+          <input type="text" id="report-title" placeholder="Defaults to filename" />
+        </div>
+
+        <div class="field">
+          <label for="output-dir">Output directory</label>
+          <input type="text" id="output-dir" placeholder="Defaults to same folder as data file" />
+          <!-- Note: HTML file inputs cannot pick directories cross-platform.
+               DS-B: wire this to a /browse-dir endpoint or accept typed paths. -->
+        </div>
+      </section>
+
+      <!-- Generate -->
+      <section class="card" id="generate-section">
+        <h2>3. Generate</h2>
+        <button id="generate-btn"
+                class="btn-primary"
+                disabled
+                onclick="startGenerate()">
+          Generate Report
+        </button>
+        <p class="hint" id="generate-hint">Select a data file to enable.</p>
+      </section>
+
+      <!-- Status / log -->
+      <section class="card hidden" id="status-section">
+        <h2>Status</h2>
+        <div id="spinner" class="spinner hidden"></div>
+        <pre id="log-area"></pre>
+
+        <!-- Success actions — hidden until render completes -->
+        <div id="success-actions" class="hidden">
+          <h3>Delivery package ready</h3>
+          <div class="action-row">
+            <button class="btn-secondary" id="open-report-btn" onclick="openReport()">
+              Open Report
+            </button>
+            <button class="btn-secondary" id="download-report-btn" onclick="downloadFile('report')">
+              Download Report
+            </button>
+            <button class="btn-secondary" id="download-manifest-btn" onclick="downloadFile('manifest')">
+              Download Manifest
+            </button>
+          </div>
+          <p class="hint" id="checksum-note"></p>
+        </div>
+
+        <!-- Error display — hidden until render fails -->
+        <div id="error-box" class="hidden error-box">
+          <strong>Render failed</strong>
+          <pre id="error-log"></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>hvtiEDAreports &nbsp;·&nbsp; <a href="https://github.com/ehrlinger/hvtiEDAreports" target="_blank">github.com/ehrlinger/hvtiEDAreports</a></p>
+    </footer>
+  </div>
+
+  <script>
+    // State
+    let selectedFilePath = null;
+    let jobId = null;
+    let ws = null;
+    let reportPath = null;
+    let outputDir = null;
+
+    // -----------------------------------------------------------------
+    // File selection
+    // -----------------------------------------------------------------
+    function onFileSelected(input) {
+      if (input.files.length === 0) return;
+      const file = input.files[0];
+      // In a packaged app the full path is available via webkitRelativePath
+      // or a custom /browse-dir endpoint.  For now use the filename as a hint.
+      selectedFilePath = file.name;
+
+      // Pre-fill x-axis if not already set
+      // (DS-B: wire to /detect-time-axis after upload if possible)
+
+      document.getElementById("generate-btn").disabled = false;
+      document.getElementById("generate-hint").textContent =
+        `Selected: ${file.name}`;
+    }
+
+    // -----------------------------------------------------------------
+    // Generate
+    // -----------------------------------------------------------------
+    async function startGenerate() {
+      if (!selectedFilePath) return;
+
+      // Show status section
+      document.getElementById("status-section").classList.remove("hidden");
+      document.getElementById("success-actions").classList.add("hidden");
+      document.getElementById("error-box").classList.add("hidden");
+      document.getElementById("log-area").textContent = "";
+      document.getElementById("spinner").classList.remove("hidden");
+      document.getElementById("generate-btn").disabled = true;
+
+      const body = {
+        data_file:       selectedFilePath,
+        x_axis_var:      document.getElementById("x-axis").value || null,
+        title:           document.getElementById("report-title").value || null,
+        output_dir:      document.getElementById("output-dir").value || null,
+        cat_max:         10,
+        suppress_above:  20,
+        no_manifest:     false,
+        manifest_format: "both",
+      };
+
+      // TODO: POST to /generate, get back { job_id }
+      // Then open WebSocket /ws/{job_id} for log streaming.
+      // For now show placeholder.
+      appendLog("TODO: /generate endpoint not yet implemented.");
+    }
+
+    // -----------------------------------------------------------------
+    // WebSocket log streaming
+    // -----------------------------------------------------------------
+    function connectWs(jid) {
+      ws = new WebSocket(`ws://127.0.0.1:${location.port}/ws/${jid}`);
+
+      ws.onmessage = (evt) => {
+        const msg = evt.data;
+        if (msg === "__DONE__") {
+          onRenderSuccess();
+        } else if (msg === "__ERROR__") {
+          onRenderError();
+        } else {
+          appendLog(msg);
+        }
+      };
+
+      ws.onerror = () => appendLog("[WebSocket error]");
+    }
+
+    function appendLog(line) {
+      const el = document.getElementById("log-area");
+      el.textContent += line + "\n";
+      el.scrollTop = el.scrollHeight;
+    }
+
+    // -----------------------------------------------------------------
+    // Post-render actions
+    // -----------------------------------------------------------------
+    function onRenderSuccess() {
+      document.getElementById("spinner").classList.add("hidden");
+      document.getElementById("success-actions").classList.remove("hidden");
+      document.getElementById("checksum-note").textContent =
+        `Checksum written to ${outputDir || "."}/${selectedFilePath?.split(".")[0] ?? ""}.sha256`;
+    }
+
+    function onRenderError() {
+      document.getElementById("spinner").classList.add("hidden");
+      const errBox = document.getElementById("error-box");
+      errBox.classList.remove("hidden");
+      document.getElementById("error-log").textContent =
+        document.getElementById("log-area").textContent;
+      document.getElementById("generate-btn").disabled = false;
+    }
+
+    function openReport() {
+      // TODO: wire to reportPath from server response
+      alert("TODO: open report in browser");
+    }
+
+    function downloadFile(type) {
+      // TODO: GET /download/{filename}?output_dir=...
+      alert(`TODO: download ${type}`);
+    }
+  </script>
+</body>
+</html>

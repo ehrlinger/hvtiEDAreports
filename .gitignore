@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+*.egg-info/
+pip-wheel-metadata/
+.installed.cfg
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# Ruff
+.ruff_cache/
+
+# Quarto
+/.quarto/
+*_files/
+*_cache/
+*.html
+!launcher/templates/*.html
+
+# PyInstaller
+installer/dist/
+installer/build/
+installer/quarto/
+*.spec.bak
+
+# Data — never commit real patient data
+data/*.xpt
+data/*.sas7bdat
+data/*.csv
+data/*.pkl
+data/*.parquet
+!data/sample_synthetic.*
+!data/.gitkeep
+
+# Generated reports
+reports/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter (if used for exploration)
+.ipynb_checkpoints/
+*.ipynb
