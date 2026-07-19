@@ -129,7 +129,7 @@ hvtiEDAreports/
     loader.py           # Multi-format data ingestion
     classify.py         # Variable classification engine
     plots.py            # plotnine figure factories (hv_eda port)
-    theme.py            # Manuscript theme (HVI reference)
+    theme.py            # Manuscript theme (HVTI reference)
     summary.py          # Summary statistics table
     delivery.py         # Manifest and checksum generation
   launcher/             # Desktop web UI

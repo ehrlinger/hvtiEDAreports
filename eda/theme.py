@@ -1,5 +1,5 @@
 """
-theme.py — Manuscript-quality plotnine theme for CORR / HVI publications.
+theme.py — Manuscript-quality plotnine theme for CORR / HVTI publications.
 
 Matches the visual style established in hvtiPlotR's hv_eda() output.
 
@@ -43,7 +43,7 @@ MISSING_CATEGORY_LABEL: str = "(Missing)"
 
 
 def hvi_theme():
-    """Return a plotnine theme matching the HVI manuscript aesthetic.
+    """Return a plotnine theme matching the HVTI manuscript aesthetic.
 
     Characteristics
     ---------------
