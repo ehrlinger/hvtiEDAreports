@@ -23,7 +23,7 @@ Two existing codebases inform this project:
 | Source | Language | What it contributes |
 |---|---|---|
 | [xportEDA](https://github.com/ehrlinger/xportEDA) | R / Shiny | Architecture: variable classification engine, faceted histogram and scatter-plot panels, data summary page, SAS xport file support. |
-| [hvtiPlotR `hv_eda()`](https://github.com/ehrlinger/hvtiPlotR) | R / ggplot2 | Canonical per-variable figure style for CORR publications: scatter+LOESS for continuous, stacked bar for categorical, `(Missing)` as an explicit category. CCF HVI manuscript theme is the visual reference. |
+| [hvtiPlotR `hv_eda()`](https://github.com/ehrlinger/hvtiPlotR) | R / ggplot2 | Canonical per-variable figure style for CORR publications: scatter+LOESS for continuous, stacked bar for categorical, `(Missing)` as an explicit category. CCF HVTI manuscript theme is the visual reference. |
 
 The deliverable is a tool that a data scientist runs once per delivery to produce a PDF report and delivery package. End users (collaborators, registry partners) receive and open those files — they never interact with Python or the command line.
 
@@ -37,7 +37,7 @@ The deliverable is a tool that a data scientist runs once per delivery to produc
 - Support SAS xport (`.xpt`), SAS binary (`.sas7bdat`), CSV, and pickle input formats.
 - Replicate xportEDA's variable classification and panel layout logic in Python.
 - Port `hv_eda()` figure style to plotnine: scatter+LOESS for continuous, stacked bar for categorical, missing shown explicitly.
-- Apply a manuscript-quality visual theme consistent with CORR/HVI standards.
+- Apply a manuscript-quality visual theme consistent with CORR/HVTI standards.
 - Generate a delivery manifest (JSON + Markdown) and SHA-256 checksum file alongside every report.
 - Provide two interfaces for the report generator:
   - CLI: `quarto render` with parameters, usable in scripts and pipelines.
@@ -89,7 +89,7 @@ hvtiEDAreports/
     loader.py                 # Multi-format data ingestion
     classify.py               # Variable classification engine
     plots.py                  # plotnine figure factories (hv_eda port)
-    theme.py                  # Manuscript theme constants (HVI reference)
+    theme.py                  # Manuscript theme constants (HVTI reference)
     summary.py                # Summary statistics table
     delivery.py               # Manifest and checksum generation
   launcher/                   # Desktop web UI

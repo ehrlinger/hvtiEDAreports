@@ -26,7 +26,7 @@ def summary_table(classified: ClassifiedDataset):
     TODO: implement
     - Compute per-variable statistics from classified.df.
     - Build a pandas DataFrame with one row per variable.
-    - Render with great_tables.GT(), applying the HVI color scheme.
+    - Render with great_tables.GT(), applying the HVTI color scheme.
     - Fallback: return a pandas Styler if great_tables is unavailable.
     """
     raise NotImplementedError
