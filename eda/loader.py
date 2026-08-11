@@ -21,6 +21,7 @@ import pathlib
 from typing import Any
 
 import pandas as pd
+import pyreadstat
 
 
 # ---------------------------------------------------------------------------
@@ -82,36 +83,43 @@ def load_dataset(path: str | pathlib.Path) -> tuple[pd.DataFrame, dict[str, str]
 # ---------------------------------------------------------------------------
 
 
-def _load_csv(path: pathlib.Path) -> tuple[pd.DataFrame, dict]:
+def _load_csv(path: pathlib.Path) -> tuple[pd.DataFrame, dict[str, str]]:
     """Load CSV with UTF-8 / latin-1 encoding fallback."""
-    # TODO: implement
     # Attempt UTF-8; fall back to latin-1 on UnicodeDecodeError
-    raise NotImplementedError
+    try:
+        df = pd.read_csv(path, encoding="utf-8")
+    except UnicodeDecodeError:
+        df = pd.read_csv(path, encoding="latin-1")
+    return df, {}
 
 
-def _load_xpt(path: pathlib.Path) -> tuple[pd.DataFrame, dict]:
+def _load_xpt(path: pathlib.Path) -> tuple[pd.DataFrame, dict[str, str]]:
     """Load SAS xport (.xpt) via pyreadstat, preserving variable labels."""
-    # TODO: implement
-    # import pyreadstat
-    # df, meta = pyreadstat.read_xport(path)
-    # column_labels = meta.column_labels_formatted or {}
-    # return df, column_labels
-    raise NotImplementedError
+    df, meta = pyreadstat.read_xport(str(path))
+    # column_names_to_labels is exactly what we want: dict[column_name → label]
+    column_labels = meta.column_names_to_labels or {}
+    return df, column_labels
 
 
-def _load_sas7bdat(path: pathlib.Path) -> tuple[pd.DataFrame, dict]:
+def _load_sas7bdat(path: pathlib.Path) -> tuple[pd.DataFrame, dict[str, str]]:
     """Load SAS binary (.sas7bdat) via pyreadstat, preserving variable labels."""
-    # TODO: implement
-    raise NotImplementedError
+    df, meta = pyreadstat.read_sas7bdat(str(path))
+    column_labels = meta.column_names_to_labels or {}
+    return df, column_labels
 
 
-def _load_pickle(path: pathlib.Path) -> tuple[pd.DataFrame, dict]:
-    """Load a pickled DataFrame.  Raises TypeError if contents are not a DataFrame."""
-    # TODO: implement
-    raise NotImplementedError
+def _load_pickle(path: pathlib.Path) -> tuple[pd.DataFrame, dict[str, str]]:
+    """Load a pickled DataFrame. Raises TypeError if contents are not a DataFrame."""
+    df = pd.read_pickle(path)
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError(
+            f"Pickle file does not contain a DataFrame. "
+            f"Got {type(df).__name__} instead."
+        )
+    return df, {}
 
 
-def _load_parquet(path: pathlib.Path) -> tuple[pd.DataFrame, dict]:
+def _load_parquet(path: pathlib.Path) -> tuple[pd.DataFrame, dict[str, str]]:
     """Load a Parquet file via pandas."""
-    # TODO: implement
-    raise NotImplementedError
+    df = pd.read_parquet(path)
+    return df, {}

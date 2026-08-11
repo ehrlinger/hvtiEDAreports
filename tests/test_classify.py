@@ -116,8 +116,8 @@ class TestMissingValues:
 
 class TestThresholdOverrides:
     def test_custom_cat_max(self, synthetic_df):
-        """Raising cat_unique_max should reclassify asa_class as continuous."""
-        result = classify_dataset(synthetic_df, cat_unique_max=50)
+        """Lowering cat_unique_max reclassifies low-cardinality numeric columns as continuous."""
+        result = classify_dataset(synthetic_df, cat_unique_max=3)
         assert "asa_class" in result.continuous
 
     def test_custom_suppress_above(self, synthetic_df):

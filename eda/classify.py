@@ -170,14 +170,63 @@ def classify_dataset(
     -------
     ClassifiedDataset
     """
-    # TODO: implement
-    # Steps:
-    #   1. For each column, count unique non-null values (dropna=True).
-    #   2. Apply rules in order (see module docstring).
-    #      - bool dtype counts as logical regardless of unique count.
-    #   3. Detect x_axis_var via _detect_time_axis() unless overridden.
-    #   4. Populate and return ClassifiedDataset.
-    raise NotImplementedError
+
+    if column_labels is None:
+        column_labels = {}
+
+    continuous: list[str] = []
+    categorical: list[str] = []
+    logical: list[str] = []
+    suppressed: list[str] = []
+
+    for col in df.columns:
+        series = df[col]
+        # nunique() drops NaNs by default → exactly the "unique non-null" count
+        n_unique = series.nunique()
+        dtype = series.dtype
+
+        # Rule 1: logical (bool dtype or <= logical_max_unique unique values)
+        # Uses dtype.kind == "b" instead of pd.api.types.is_bool_dtype
+        if dtype.kind == "b" or n_unique <= logical_max_unique:
+            logical.append(col)
+            categorical.append(col)
+        # Rule 2: object / string / Categorical dtype
+        # Uses dtype.kind == "O" (covers object + string) + explicit isinstance for CategoricalDtype
+        # (replaces pd.api.types.is_object_dtype / is_string_dtype / is_categorical_dtype)
+        elif dtype.kind == "O" or isinstance(dtype, pd.CategoricalDtype):
+            categorical.append(col)
+            if n_unique > suppress_levels_above:
+                suppressed.append(col)
+        # Rules 3+4: numeric
+        # Uses dtype.kind in ("i", "f", "u", "c") instead of pd.api.types.is_numeric_dtype
+        elif dtype.kind in ("i", "f", "u", "c"):
+            if logical_max_unique < n_unique <= cat_unique_max:
+                # Rule 3
+                categorical.append(col)
+                if n_unique > suppress_levels_above:
+                    suppressed.append(col)
+            else:
+                # Rule 4
+                continuous.append(col)
+        else:
+            # Fallback for other dtypes (datetime64, etc.) — treat as categorical
+            categorical.append(col)
+            if n_unique > suppress_levels_above:
+                suppressed.append(col)
+
+    # Time-axis detection (unless caller overrode it)
+    if x_axis_var is None:
+        x_axis_var = _detect_time_axis(continuous)
+
+    return ClassifiedDataset(
+        df=df,
+        continuous=continuous,
+        categorical=categorical,
+        logical=logical,
+        suppressed=suppressed,
+        x_axis_var=x_axis_var,
+        column_labels=column_labels,
+    )
 
 
 def _detect_time_axis(
@@ -197,5 +246,12 @@ def _detect_time_axis(
     keywords:
         Ordered list of substrings to match against column names.
     """
-    # TODO: implement
-    raise NotImplementedError
+    if not continuous:
+        return ""
+    for kw in keywords:
+        kwl = kw.lower()
+        for col in continuous:
+            if kwl in col.lower():
+                return col
+    # No keyword match → first continuous variable
+    return continuous[0]
